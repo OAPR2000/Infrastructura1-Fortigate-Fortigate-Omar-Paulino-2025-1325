@@ -1,0 +1,11 @@
+# FW1-1325 - Unico paso hecho por CLI (consola de GNS3).
+# Primer login: admin / (vacio) -> el equipo obliga a crear una contrasena nueva.
+# Le doy IP a port2 para poder entrar a la GUI desde el webterm-1.
+config system interface
+    edit "port2"
+        set mode static
+        set ip 192.168.13.1 255.255.255.0
+        set allowaccess ping https http
+    next
+end
+# A partir de aqui todo se hizo por GUI en http://192.168.13.1
