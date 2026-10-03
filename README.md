@@ -27,9 +27,6 @@ En el video muestro la topología, la configuración de los dos FortiGate, el t�
 9. [Usuario](#9-usuario)
 10. [Servidor Web](#10-servidor-web)
 11. [Pruebas y resultados](#11-pruebas-y-resultados)
-12. [Problemas que encontré y cómo los resolví](#12-problemas-que-encontré-y-cómo-los-resolví)
-13. [Estructura del repositorio](#13-estructura-del-repositorio)
-
 ---
 
 ## 1. Propósito de la práctica
