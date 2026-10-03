@@ -1,0 +1,19 @@
+# Comandos que use en el CLI de cada FortiGate para sacar el running-config
+# (el "show full-configuration" completo es demasiado largo para la consola).
+show system global
+show system interface port1
+show system interface port2
+show system interface VLAN10          # solo FW1
+show system dns
+show system dhcp server               # solo FW1
+show router static
+show firewall address
+show firewall addrgrp
+show firewall policy
+show vpn ipsec phase1-interface
+show vpn ipsec phase2-interface
+
+# Estado del tunel
+get vpn ipsec tunnel summary
+diagnose vpn tunnel list
+get router info routing-table all
