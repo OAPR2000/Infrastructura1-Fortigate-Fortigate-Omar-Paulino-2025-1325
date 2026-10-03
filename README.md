@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/32985034/README.md)
 # Infraestructura 1: VPN Site-to-Site FortiGate ↔ FortiGate
 
 **Autor:** Omar Paulino · **Matrícula:** 20251325
