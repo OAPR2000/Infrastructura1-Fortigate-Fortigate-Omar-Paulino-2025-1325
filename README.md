@@ -628,4 +628,3 @@ end
 Al volver a poner la interfaz en *Enabled* (`set status up`), el primer `curl` dispara la negociación del túnel y todas las pruebas funcionan otra vez. **Conclusión:** la única vía entre el Usuario y el Servidor Web es el túnel IPsec.
 
         └── pruebas_usuario.sh
-`
