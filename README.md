@@ -1,4 +1,4 @@
-# Infraestructura 1: VPN Site-to-Site FortiGate ↔ FortiGate
+# Infraestructura 1: VPN Site-to-Site Fortinet ↔ Fortinet
 
 **Autor:** Omar Paulino · **Matrícula:** 20251325
 **Plataforma:** GNS3 · FortiGate VM 7.0.9 · Cisco IOSvL2 · Ubuntu Cloud 24.04
@@ -7,8 +7,7 @@
 
 ## Video de demostración
 
-https://youtu.be/oAHdkiUZZGs?si=y0z8-XKvlGeKGFbf
-
+https://youtu.be/oAHdkiUZZGs?si=Pvg5xrStRHZLx0kg
 
 En el video muestro la topología, la configuración de los dos FortiGate, el túnel IPsec activo y las pruebas desde el Usuario hacia el Servidor Web con la VPN arriba y con la VPN abajo.
 
@@ -26,7 +25,8 @@ En el video muestro la topología, la configuración de los dos FortiGate, el t�
 8. [Webterms de gestión](#8-webterms-de-gestión)
 9. [Usuario](#9-usuario)
 10. [Servidor Web](#10-servidor-web)
-11. [Pruebas y resultados](#11-pruebas-y-resultados)
+11. [Resumen de NAT y de las reglas de acceso](#11-resumen-de-nat-y-de-las-reglas-de-acceso)
+12. [Pruebas y resultados](#12-pruebas-y-resultados)
 ---
 
 ## 1. Propósito de la práctica
@@ -63,21 +63,21 @@ Con esto demuestro que el tráfico entre las dos LAN viaja cifrado por un medio 
 
 ```mermaid
 flowchart TB
-    NAT1["☁️ NAT1 (Internet)<br/>gateway 192.168.42.1"]
+    NAT1["NAT1 (Internet)<br/>gateway 192.168.42.1"]
     ISP["IOSvL2-1 · ISP-SW-1325<br/>switch del ISP"]
-    FW1["🔥 FW1-1325<br/>port1: 192.168.42.13<br/>+ 200.25.13.13 (pública)"]
-    FW2["🔥 FMW2-1325<br/>port1: 192.168.42.25<br/>+ 200.25.13.25 (pública)"]
+    FW1["FW1-1325<br/>port1: 192.168.42.13<br/>+ 200.25.13.13 (pública)"]
+    FW2["FMW2-1325<br/>port1: 192.168.42.25<br/>+ 200.25.13.25 (pública)"]
     SW1["IOSvL2-2 · SW1-1325<br/>troncal: VLAN 10 + nativa 99"]
     SW2["IOSvL2-3 · SW2-1325<br/>VLAN 1"]
-    U["💻 Usuario<br/>VLAN 10 · DHCP 10.13.25.10/25"]
-    WT1["🌐 webterm-1<br/>192.168.13.2 (gestión FW1)"]
-    WS["🖥️ WebServer<br/>10.13.25.130/28 · HTTPS"]
-    WT2["🌐 webterm-2<br/>192.168.25.2 (gestión FW2)"]
+    U["Usuario<br/>VLAN 10 · DHCP 10.13.25.10/25"]
+    WT1["webterm-1<br/>192.168.13.2 (gestión FW1)"]
+    WS["WebServer<br/>10.13.25.130/28 · HTTPS"]
+    WT2["webterm-2<br/>192.168.25.2 (gestión FW2)"]
 
     NAT1 --- ISP
     ISP ---|Gi0/1 ↔ port1| FW1
     ISP ---|Gi0/2 ↔ port1| FW2
-    FW1 <-.->|"🔒 Túnel IPsec VPN<br/>200.25.13.13 ↔ 200.25.13.25"| FW2
+    FW1 <-.->|"Túnel IPsec VPN<br/>200.25.13.13 ↔ 200.25.13.25"| FW2
     FW1 ---|port2 ↔ Gi0/0 troncal| SW1
     SW1 ---|Gi0/1 VLAN 10| U
     SW1 ---|Gi0/2 VLAN 99| WT1
@@ -91,9 +91,9 @@ flowchart TB
 ```mermaid
 flowchart LR
     U["Usuario<br/>10.13.25.10"] --> FW1{"FW1<br/>¿ruta a<br/>10.13.25.128/28?"}
-    FW1 -- "Túnel UP<br/>(ruta por VPN-SITIO2, distancia 10)" --> T["🔒 IPsec cifrado DES<br/>200.25.13.13 → 200.25.13.25"]
+    FW1 -- "Túnel UP<br/>(ruta por VPN-SITIO2, distancia 10)" --> T["IPsec cifrado DES<br/>200.25.13.13 → 200.25.13.25"]
     T --> FW2["FW2<br/>descifra"] --> WS["WebServer<br/>10.13.25.130"]
-    FW1 -- "Túnel DOWN<br/>(ruta Blackhole, distancia 254)" --> X["✖ Descartado"]
+    FW1 -- "Túnel DOWN<br/>(ruta Blackhole, distancia 254)" --> X["Descartado"]
 ```
 
 ### Flujo del tráfico hacia Internet (NAT)
@@ -101,7 +101,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     U["Usuario<br/>10.13.25.10"] --> FW1["FW1<br/>política USUARIOS-INTERNET<br/>NAT → 192.168.42.13"]
-    FW1 --> NAT1["NAT1<br/>192.168.42.1"] --> I["🌍 Internet"]
+    FW1 --> NAT1["NAT1<br/>192.168.42.1"] --> I["Internet"]
 ```
 
 ---
@@ -189,7 +189,7 @@ Es un switch de capa 2 que une la nube NAT1 con la WAN de los dos FortiGate. Tod
 
 ## 6. FortiGate 1 (FW1-1325)
 
-> 📝 **Nota:** toda la configuración de esta sección la hice **de forma gráfica (GUI)** desde el Firefox del webterm-1, entrando a `http://192.168.13.1`. El único paso por CLI fue darle la IP inicial a `port2`. El running-config completo en texto está en [`running-configs/FW1-1325.conf`](VPN-Infraestructura-1-FortiGate-FortiGate/running-configs/FW1-1325.conf).
+**Nota:** toda la configuración de esta sección la hice **de forma gráfica (GUI)** desde el Firefox del webterm-1, entrando a `http://192.168.13.1`. El único paso por CLI fue darle la IP inicial a `port2`. El running-config completo en texto está en [`running-configs/FW1-1325.conf`](VPN-Infraestructura-1-FortiGate-FortiGate/running-configs/FW1-1325.conf).
 
 ### 6.1 Arranque inicial por CLI
 
@@ -291,8 +291,12 @@ Los demás objetos (`all`, `none`, FQDN de Google/Microsoft, `SSLVPN_TUNNEL_ADDR
 | 3 | vpn_VPN-SITIO2_remote_0 | VPN-SITIO2 | VLAN10 (USUARIOS) | VPN-SITIO2_remote | VPN-SITIO2_local | ALL | ACCEPT | Disabled | Security Events |
 | — | Implicit Deny | any | any | all | all | ALL | DENY | — | — |
 
-- **NAT:** la política `USUARIOS-INTERNET` la creé a mano. Traduce la IP privada del Usuario (`10.13.25.x`) a la IP de WAN `192.168.42.13` para que pueda salir a Internet (instalar paquetes, `ping 8.8.8.8`).
-- **Sin NAT en la VPN:** las dos políticas `vpn_*` las creó el asistente sin NAT, para que las IP internas viajen tal cual dentro del túnel y cada lado vea la IP real del otro.
+**Explicación de cada regla:**
+
+- **1. USUARIOS-INTERNET (NAT de origen):** la creé a mano. Permite que la VLAN 10 salga a Internet y, con NAT activado, traduce la IP privada del Usuario (`10.13.25.x`) a la IP de WAN `192.168.42.13`, la única que NAT1 sabe devolver. Así el Usuario pudo instalar paquetes y hacer `ping 8.8.8.8`. Su destino es `all`, pero no alcanza la LAN remota: el FortiGate primero mira la ruta, y la ruta hacia `10.13.25.128/28` apunta al túnel, no a `port1`.
+- **2. vpn_VPN-SITIO2_local_0 (salida por la VPN):** la creó el asistente. Permite el tráfico del Usuario (`10.13.25.0/25`) hacia el Servidor Web (`10.13.25.128/28`) por la interfaz del túnel. **Sin NAT**, para que el paquete viaje con su IP real y coincida con los selectores de Fase 2.
+- **3. vpn_VPN-SITIO2_remote_0 (entrada desde la VPN):** permite el tráfico que llega descifrado desde el Sitio 2 hacia la VLAN 10. Sin NAT.
+- **Implicit Deny (bloqueo por defecto):** es la última regla de todo FortiGate y descarta todo lo que no coincide con las anteriores. Por ejemplo, bloquea cualquier tráfico que entre por la WAN hacia la LAN, porque no existe ninguna política `port1 → VLAN10`.
 
 ![FW1 Firewall Policy](VPN-Infraestructura-1-FortiGate-FortiGate/images/08_fw1_policies.png)
 
@@ -342,7 +346,7 @@ Los demás objetos (`all`, `none`, FQDN de Google/Microsoft, `SSLVPN_TUNNEL_ADDR
 | | Key Lifetime | 43200 s |
 | | Auto-negotiate | Desactivado (el túnel sube cuando llega tráfico) |
 
-> ⚠️ **Sobre el cifrado DES:** la licencia de evaluación de FortiOS 7.0.9 solo permite cifrado de baja seguridad (DES). En un entorno real usaría AES-256 con SHA-256 o superior. El asistente eligió automáticamente DES-MD5 y DES-SHA1.
+**Sobre el cifrado DES:** la licencia de evaluación de FortiOS 7.0.9 solo permite cifrado de baja seguridad (DES). En un entorno real usaría AES-256 con SHA-256 o superior. El asistente eligió automáticamente DES-MD5 y DES-SHA1.
 
 ![FW1 VPN Network y Fase 1](VPN-Infraestructura-1-FortiGate-FortiGate/images/09_fw1_vpn_network_fase1.png)
 ![FW1 VPN Authentication](VPN-Infraestructura-1-FortiGate-FortiGate/images/10_fw1_vpn_authentication.png)
@@ -358,7 +362,7 @@ En *Dashboard → Network → IPsec* el túnel `VPN-SITIO2` aparece **Up** (Fase
 
 ## 7. FortiGate 2 (FMW2-1325)
 
-> 📝 **Nota:** toda la configuración de esta sección la hice **de forma gráfica (GUI)** desde el Firefox del webterm-2, entrando a `http://192.168.25.1`. El único paso por CLI fue darle la IP inicial a `port2`. El running-config completo en texto está en [`running-configs/FMW2-1325.conf`](VPN-Infraestructura-1-FortiGate-FortiGate/running-configs/FMW2-1325.conf).
+**Nota:** toda la configuración de esta sección la hice **de forma gráfica (GUI)** desde el Firefox del webterm-2, entrando a `http://192.168.25.1`. El único paso por CLI fue darle la IP inicial a `port2`. El running-config completo en texto está en [`running-configs/FMW2-1325.conf`](VPN-Infraestructura-1-FortiGate-FortiGate/running-configs/FMW2-1325.conf).
 
 ### 7.1 Arranque inicial por CLI
 
@@ -437,8 +441,12 @@ Los servidores de FortiGuard aparecen como *Unreachable* porque la VM de evaluac
 | 3 | vpn_VPN-SITIO1_remote_0 | VPN-SITIO1 | port2 (LAN-SITIO2) | VPN-SITIO1_remote | VPN-SITIO1_local | ALL | ACCEPT | Disabled | Security Events |
 | — | Implicit Deny | any | any | all | all | ALL | DENY | — | — |
 
-- **NAT:** con `SERVIDOR-INTERNET` el Servidor Web sale a Internet traducido a `192.168.42.25`. La usé para instalar Apache.
-- Las políticas de la VPN las creó el asistente y no hacen NAT.
+**Explicación de cada regla:**
+
+- **1. SERVIDOR-INTERNET (NAT de origen):** la creé a mano. Permite que la red del servidor salga a Internet traducida a `192.168.42.25`. La usé para instalar Apache.
+- **2. vpn_VPN-SITIO1_local_0 (salida por la VPN):** permite el tráfico del servidor hacia la LAN del Usuario por el túnel. Sin NAT.
+- **3. vpn_VPN-SITIO1_remote_0 (entrada desde la VPN):** es la que deja entrar al servidor el tráfico del Usuario que llega descifrado por el túnel (ping, traceroute y HTTPS). Sin NAT, así el servidor ve la IP real del Usuario (`10.13.25.10`).
+- **Implicit Deny (bloqueo por defecto):** descarta todo lo demás. Desde Internet nadie puede llegar al servidor, porque no hay ninguna política `port1 → port2` ni ninguna VIP publicada.
 
 ![FW2 Firewall Policy](VPN-Infraestructura-1-FortiGate-FortiGate/images/21_fw2_policies.png)
 
@@ -574,11 +582,24 @@ curl -k https://localhost # devuelve la página
 
 ---
 
-## 11. Pruebas y resultados
+## 11. Resumen de NAT y de las reglas de acceso
+
+| Tráfico | Dónde se controla | NAT | Resultado |
+| --- | --- | --- | --- |
+| Usuario → Internet | FW1, política `USUARIOS-INTERNET` | Sí, origen traducido a `192.168.42.13` | Permitido |
+| WebServer → Internet | FW2, política `SERVIDOR-INTERNET` | Sí, origen traducido a `192.168.42.25` | Permitido |
+| Usuario → WebServer con el túnel arriba | FW1 `vpn_VPN-SITIO2_local_0` → túnel IPsec → FW2 `vpn_VPN-SITIO1_remote_0` | No | Permitido y cifrado |
+| Usuario → WebServer con el túnel abajo | Ruta **Blackhole** del FW1 (distancia 254) | — | Descartado: nunca sale sin cifrar |
+| Internet → cualquier LAN | Implicit Deny en los dos FortiGate | — | Bloqueado |
+| Administración de los FortiGate desde la WAN | Administrative Access de `port1` solo con PING | — | Bloqueado (solo responde ping) |
+
+---
+
+## 12. Pruebas y resultados
 
 Los comandos de prueba están en [`scripts/hosts/pruebas_usuario.sh`](VPN-Infraestructura-1-FortiGate-FortiGate/scripts/hosts/pruebas_usuario.sh). La demostración completa, incluida la prueba con la VPN caída, está en el [video](#video-de-demostración).
 
-### 11.1 Con la VPN arriba (desde el Usuario)
+### 12.1 Con la VPN arriba (desde el Usuario)
 
 ```bash
 ping -c 4 10.13.25.130
@@ -591,7 +612,7 @@ curl -k https://10.13.25.130
 | Prueba | Resultado |
 | --- | --- |
 | Estado del túnel | **Up** en los dos FortiGate (FW1 ve `200.25.13.25`, FW2 ve `200.25.13.13`) |
-| ping 10.13.25.130 | Responde con TTL 62 (dos saltos de router: FW1 y FW2). En esta captura se perdieron paquetes porque la RAM de mi laptop estaba al 98% (ver sección 12) |
+| ping 10.13.25.130 | Responde con TTL 62 (dos saltos de router: FW1 y FW2). En esta captura se perdieron paquetes porque la RAM de mi laptop estaba al 98% (ver sección 13) |
 | traceroute | 3 saltos: `10.13.25.1` (FW1) → `192.168.42.25` (FW2) → `10.13.25.130` (WebServer) |
 | curl -k https | Devuelve `<h1>Servidor Web - Sitio 2 - Omar Paulino 20251325</h1>` |
 
@@ -600,7 +621,7 @@ curl -k https://10.13.25.130
 - El salto 2 aparece como `192.168.42.25` porque el FW2 responde el ICMP con la IP principal de su WAN; la interfaz del túnel no tiene IP propia.
 - Que sean solo 3 saltos, sin pasar por el gateway de NAT1 (`192.168.42.1`), demuestra que el tráfico va directo de FortiGate a FortiGate por dentro del túnel.
 
-### 11.2 Con la VPN abajo
+### 12.2 Con la VPN abajo
 
 Para tumbar la VPN deshabilité la interfaz del túnel en el FW1: *Network → Interfaces → port1 → VPN-SITIO2 → Status: Disabled*. Por CLI es lo mismo:
 
@@ -622,3 +643,5 @@ end
 | ping 8.8.8.8 | Sigue respondiendo (Internet funciona por la política NAT) |
 
 Al volver a poner la interfaz en *Enabled* (`set status up`), el primer `curl` dispara la negociación del túnel y todas las pruebas funcionan otra vez. **Conclusión:** la única vía entre el Usuario y el Servidor Web es el túnel IPsec.
+
+---
