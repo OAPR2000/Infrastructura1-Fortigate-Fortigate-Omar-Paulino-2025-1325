@@ -8,7 +8,8 @@
 
 ## Video de demostración
 
-▶️ **[Ver el video de la práctica](PEGAR_AQUI_EL_LINK_DEL_VIDEO)**
+https://youtu.be/oAHdkiUZZGs?si=y0z8-XKvlGeKGFbf
+
 
 En el video muestro la topología, la configuración de los dos FortiGate, el túnel IPsec activo y las pruebas desde el Usuario hacia el Servidor Web con la VPN arriba y con la VPN abajo.
 
@@ -626,54 +627,7 @@ end
 
 Al volver a poner la interfaz en *Enabled* (`set status up`), el primer `curl` dispara la negociación del túnel y todas las pruebas funcionan otra vez. **Conclusión:** la única vía entre el Usuario y el Servidor Web es el túnel IPsec.
 
----
 
-## 12. Problemas que encontré y cómo los resolví
 
-| Problema | Causa | Solución |
-| --- | --- | --- |
-| Los webterm no tenían red (*Unable to connect* en Firefox) | La configuración de red de la imagen viene toda comentada con `#` | Configuré la IP fija con *Edit config* del nodo (sección 8) |
-| El webterm-2 no abría (VNC *conexión denegada*) | El contenedor no terminó de arrancar o se cayó por falta de RAM | Borré el nodo, lo creé otra vez, lo configuré y esperé unos 30 segundos antes de abrirlo |
-| La VPN no podía usar IP públicas porque no hay router de ISP | NAT1 solo conoce la red `192.168.42.0/24` | Dos IP en la misma interfaz WAN: la principal `192.168.42.x` para Internet y la secundaria `200.25.13.x` para la VPN |
-| El túnel no negociaba con las IP públicas | El FortiGate negocia IKE desde su IP principal | Cambié el *Local Gateway* a *Secondary IP* (`200.25.13.13` y `200.25.13.25`) |
-| El asistente del FW2 puso `192.168.25.0/24` como subred local | `port2` tiene dos redes y el asistente toma la principal | Dejé solo `10.13.25.128/28` en *Local subnets* |
-| En el traceroute apareció `192.168.42.25` | El FW2 contesta con la IP principal de su WAN porque el túnel no tiene IP | Es el comportamiento normal; lo documenté |
-| `cat /etc/netplan/50-cloud-init.yaml` daba *Permission denied* | El archivo tiene permisos 600 (solo root) | Lo leí como root (`sudo -i`) |
-| Pérdida de paquetes en el ping y `apt` muy lento | RAM de la laptop al 98–99% con todos los nodos encendidos | Cerré programas y apagué los webterm mientras no los usaba |
-| Con *Bring Down* el túnel se volvía a levantar al hacer `curl` | El túnel se negocia bajo demanda cuando llega tráfico hacia la LAN remota | Deshabilité la interfaz `VPN-SITIO2` (Status: Disabled / `set status down`) |
-| Aviso *File System Check Recommended* en el FortiGate | Apagado brusco del nodo en GNS3 | Sin impacto en la práctica |
-
-![Permiso denegado en netplan](VPN-Infraestructura-1-FortiGate-FortiGate/images/30_problema_netplan_permiso.png)
-
----
-
-## 13. Estructura del repositorio
-
-```
-VPN-Infraestructura-1-FortiGate-FortiGate/
-├── README.md                         ← esta documentación
-├── images/                           ← capturas de pantalla (01 a 30)
-├── running-configs/
-│   ├── FW1-1325.conf                 ← FortiGate 1 (hecho por GUI)
-│   ├── FMW2-1325.conf                ← FortiGate 2 (hecho por GUI)
-│   ├── ISP-SW-1325.txt               ← IOSvL2-1
-│   ├── SW1-1325.txt                  ← IOSvL2-2
-│   └── SW2-1325.txt                  ← IOSvL2-3
-└── scripts/
-    ├── switches/
-    │   ├── 01_ISP-SW-1325.ios
-    │   ├── 02_SW1-1325.ios
-    │   └── 03_SW2-1325.ios
-    ├── fortigate/
-    │   ├── 01_FW1_bootstrap.fos      ← único paso por CLI del FW1
-    │   ├── 02_FW2_bootstrap.fos      ← único paso por CLI del FW2
-    │   └── 03_comandos_verificacion.fos
-    └── hosts/
-        ├── webterm-1_interfaces
-        ├── webterm-2_interfaces
-        ├── usuario_setup.sh
-        ├── webserver_50-cloud-init.yaml
-        ├── webserver_setup.sh
-        ├── index.html
         └── pruebas_usuario.sh
 ```
